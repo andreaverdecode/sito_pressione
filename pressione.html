@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>Pressione</title>
+
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Pressione" />
+  <meta name="theme-color" content="#0a0a0f" />
+  <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect width='512' height='512' rx='100' fill='%230a0a0f'/><circle cx='256' cy='256' r='120' fill='none' stroke='%23e84545' stroke-width='28'/><line x1='256' y1='136' x2='256' y2='376' stroke='%23e84545' stroke-width='20'/><line x1='176' y1='256' x2='336' y2='256' stroke='%23e84545' stroke-width='20'/></svg>" />
+  <link rel="manifest" href="data:application/manifest+json,%7B%22name%22%3A%22Pressione%22%2C%22short_name%22%3A%22Pressione%22%2C%22start_url%22%3A%22.%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%230a0a0f%22%2C%22theme_color%22%3A%22%230a0a0f%22%7D" />
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Mono:wght@300;400;500&display=swap');
+
+    :root {
+      --bg:      #0a0a0f;
+      --surface: #111118;
+      --card:    #16161f;
+      --border:  #1e1e2a;
+      --accent:  #e84545;
+      --accent2: #4a9eff;
+      --text:    #f0f0f5;
+      --muted:   #55556a;
+      --success: #3dd68c;
+      --safe-top:    env(safe-area-inset-top, 0px);
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+    html, body {
+      height: 100%;
+      overscroll-behavior: none;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Mono', monospace;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* ── HEADER ── */
+    header {
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: calc(var(--safe-top) + 18px) 20px 14px;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg);
+    }
+
+    .logo {
+      font-family: 'DM Serif Display', serif;
+      font-size: 21px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .logo-dot {
+      width: 9px; height: 9px;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 10px var(--accent);
+      animation: blink 2.2s ease-in-out infinite;
+    }
+
+    @keyframes blink {
+      0%,100% { opacity:1; transform:scale(1); }
+      50%      { opacity:.4; transform:scale(.75); }
+    }
+
+    .header-right {
+      font-size: 10px;
+      color: var(--muted);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+
+    /* ── TABS ── */
+    .tabs {
+      flex-shrink: 0;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .tab-btn {
+      padding: 14px 0;
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--muted);
+      background: none;
+      border: none;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: color .2s, border-color .2s;
+      position: relative;
+    }
+
+    .tab-btn.active {
+      color: var(--text);
+      border-bottom-color: var(--accent);
+    }
+
+    /* ── PAGES ── */
+    .pages {
+      flex: 1;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .page {
+      position: absolute;
+      inset: 0;
+      overflow-y: auto;
+      overflow-x: hidden;
+      -webkit-overflow-scrolling: touch;
+      padding: 16px 16px calc(var(--safe-bottom) + 20px);
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(6px);
+      transition: opacity .22s ease, transform .22s ease;
+    }
+
+    .page.active {
+      opacity: 1;
+      pointer-events: auto;
+      transform: translateY(0);
+    }
+
+    /* ── STATS ── */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .stat-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 12px 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .stat-label {
+      font-size: 8px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--muted);
+      line-height: 1.2;
+    }
+
+    .stat-value {
+      font-size: 22px;
+      font-weight: 500;
+      letter-spacing: -0.5px;
+      line-height: 1;
+    }
+    .stat-value.red   { color: var(--accent); }
+    .stat-value.blue  { color: var(--accent2); }
+    .stat-value.green { color: var(--success); }
+
+    /* ── FORM ── */
+    .form-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 20px;
+    }
+
+    .form-title {
+      font-family: 'DM Serif Display', serif;
+      font-size: 18px;
+      margin-bottom: 18px;
+    }
+
+    .field {
+      margin-bottom: 14px;
+    }
+
+    .field label {
+      display: block;
+      font-size: 9px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+
+    /* Date input */
+    input[type="date"] {
+      width: 100%;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      color: var(--text);
+      font-family: 'DM Mono', monospace;
+      font-size: 16px;
+      padding: 14px 16px;
+      outline: none;
+      -webkit-appearance: none;
+      appearance: none;
+      transition: border-color .2s;
+    }
+
+    input[type="date"]:focus { border-color: var(--accent); }
+    input[type="date"]::-webkit-calendar-picker-indicator {
+      filter: invert(.5);
+      cursor: pointer;
+      width: 20px; height: 20px;
+    }
+
+    /* Number stepper */
+    .stepper {
+      display: flex;
+      align-items: center;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      transition: border-color .2s;
+    }
+
+    .stepper:focus-within { border-color: var(--accent); }
+
+    .step-btn {
+      width: 52px;
+      height: 52px;
+      background: none;
+      border: none;
+      color: var(--muted);
+      font-size: 22px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: color .15s, background .15s;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    .step-btn:active { background: rgba(255,255,255,.05); color: var(--text); }
+
+    .step-input {
+      flex: 1;
+      background: none;
+      border: none;
+      color: var(--text);
+      font-family: 'DM Mono', monospace;
+      font-size: 22px;
+      font-weight: 500;
+      text-align: center;
+      outline: none;
+      padding: 0;
+      /* prevent zoom on iOS */
+      font-size: max(16px, 22px);
+    }
+
+    /* hide number arrows */
+    .step-input::-webkit-inner-spin-button,
+    .step-input::-webkit-outer-spin-button { -webkit-appearance: none; }
+    .step-input[type=number] { -moz-appearance: textfield; }
+
+    .row-fields {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .btn-primary {
+      width: 100%;
+      padding: 16px;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 14px;
+      font-family: 'DM Mono', monospace;
+      font-size: 13px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      cursor: pointer;
+      font-weight: 500;
+      transition: opacity .15s, transform .1s;
+      margin-top: 4px;
+    }
+
+    .btn-primary:active { opacity: .82; transform: scale(.98); }
+
+    /* ── HISTORY LIST ── */
+    .list-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    .list-title {
+      font-family: 'DM Serif Display', serif;
+      font-size: 18px;
+    }
+
+    .btn-ghost {
+      font-size: 10px;
+      color: var(--muted);
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-family: 'DM Mono', monospace;
+      letter-spacing: 1px;
+      cursor: pointer;
+      padding: 6px 12px;
+      transition: color .2s, border-color .2s;
+    }
+
+    .btn-ghost:active { color: var(--accent); border-color: var(--accent); }
+
+    .entry-list { display: flex; flex-direction: column; gap: 8px; }
+
+    .entry-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      animation: fadeUp .28s ease;
+    }
+
+    @keyframes fadeUp {
+      from { opacity:0; transform:translateY(6px); }
+      to   { opacity:1; transform:translateY(0); }
+    }
+
+    .entry-body { flex: 1; min-width: 0; }
+
+    .entry-date {
+      font-size: 10px;
+      color: var(--muted);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+
+    .entry-values {
+      display: flex;
+      align-items: baseline;
+      gap: 4px;
+    }
+
+    .val-max { font-size: 28px; font-weight: 500; color: var(--accent);  letter-spacing: -1px; }
+    .val-sep { font-size: 20px; color: var(--muted); }
+    .val-min { font-size: 28px; font-weight: 500; color: var(--accent2); letter-spacing: -1px; }
+    .val-unit { font-size: 10px; color: var(--muted); align-self: flex-end; margin-bottom: 3px; margin-left: 2px; }
+
+    .entry-tag {
+      display: inline-block;
+      font-size: 9px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      font-weight: 500;
+      padding: 3px 9px;
+      border-radius: 20px;
+      margin-top: 5px;
+    }
+
+    .tag-normal { background: rgba(61,214,140,.12); color: var(--success); }
+    .tag-high   { background: rgba(232,69,69,.12);  color: var(--accent); }
+    .tag-low    { background: rgba(74,158,255,.12); color: var(--accent2); }
+
+    .delete-btn {
+      flex-shrink: 0;
+      width: 40px; height: 40px;
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--muted);
+      font-size: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: color .15s, border-color .15s;
+    }
+
+    .delete-btn:active { color: var(--accent); border-color: var(--accent); }
+
+    .empty-state {
+      text-align: center;
+      padding: 56px 20px;
+      color: var(--muted);
+      font-size: 12px;
+      letter-spacing: 1px;
+      line-height: 2.2;
+    }
+
+    .empty-icon { font-size: 40px; display: block; margin-bottom: 12px; opacity: .35; }
+
+    /* ── TOAST ── */
+    #toast {
+      position: fixed;
+      bottom: calc(var(--safe-bottom) + 28px);
+      left: 50%;
+      transform: translateX(-50%) translateY(16px);
+      font-family: 'DM Mono', monospace;
+      font-size: 12px;
+      letter-spacing: .5px;
+      padding: 11px 22px;
+      border-radius: 24px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .28s, transform .28s;
+      z-index: 999;
+      white-space: nowrap;
+      font-weight: 500;
+    }
+
+    #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="logo">
+    <div class="logo-dot"></div>
+    Pressione
+  </div>
+  <div class="header-right">Monitor</div>
+</header>
+
+<!-- TABS -->
+<div class="tabs">
+  <button class="tab-btn active" id="tab-aggiungi" onclick="showTab('aggiungi')">+ Aggiungi</button>
+  <button class="tab-btn"        id="tab-storico"  onclick="showTab('storico')">Storico</button>
+</div>
+
+<!-- PAGES -->
+<div class="pages">
+
+  <!-- PAGE: AGGIUNGI -->
+  <div class="page active" id="page-aggiungi">
+
+    <!-- Stats -->
+    <div class="stats-row">
+      <div class="stat-card">
+        <span class="stat-label">Tot.</span>
+        <span class="stat-value green" id="stat-count">—</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">Ø Max</span>
+        <span class="stat-value red" id="stat-avg-max">—</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">Ø Min</span>
+        <span class="stat-value blue" id="stat-avg-min">—</span>
+      </div>
+    </div>
+
+    <!-- Form -->
+    <div class="form-card">
+      <div class="form-title">Nuova misurazione</div>
+
+      <div class="field">
+        <label>Data</label>
+        <input type="date" id="inp-date" />
+      </div>
+
+      <div class="row-fields">
+        <div class="field">
+          <label>Massima (sistolica)</label>
+          <div class="stepper" id="stepper-max">
+            <button class="step-btn" ontouchstart="startRepeat('max',-1)" ontouchend="stopRepeat()" ontouchcancel="stopRepeat()" onmousedown="startRepeat('max',-1)" onmouseup="stopRepeat()" onmouseleave="stopRepeat()">−</button>
+            <input class="step-input" type="number" id="inp-max" value="120" min="60" max="250" inputmode="numeric" />
+            <button class="step-btn" ontouchstart="startRepeat('max',1)" ontouchend="stopRepeat()" ontouchcancel="stopRepeat()" onmousedown="startRepeat('max',1)" onmouseup="stopRepeat()" onmouseleave="stopRepeat()">+</button>
+          </div>
+        </div>
+        <div class="field">
+          <label>Minima (diastolica)</label>
+          <div class="stepper" id="stepper-min">
+            <button class="step-btn" ontouchstart="startRepeat('min',-1)" ontouchend="stopRepeat()" ontouchcancel="stopRepeat()" onmousedown="startRepeat('min',-1)" onmouseup="stopRepeat()" onmouseleave="stopRepeat()">−</button>
+            <input class="step-input" type="number" id="inp-min" value="80" min="40" max="160" inputmode="numeric" />
+            <button class="step-btn" ontouchstart="startRepeat('min',1)" ontouchend="stopRepeat()" ontouchcancel="stopRepeat()" onmousedown="startRepeat('min',1)" onmouseup="stopRepeat()" onmouseleave="stopRepeat()">+</button>
+          </div>
+        </div>
+      </div>
+
+      <button class="btn-primary" id="btn-aggiungi">Aggiungi misurazione</button>
+    </div>
+  </div>
+
+  <!-- PAGE: STORICO -->
+  <div class="page" id="page-storico">
+    <div class="list-header">
+      <div class="list-title">Storico</div>
+      <button class="btn-ghost" id="btn-clear">Cancella tutto</button>
+    </div>
+    <div class="entry-list" id="entry-list"></div>
+  </div>
+
+</div>
+
+<div id="toast"></div>
+
+<script>
+  const KEY = 'bp_entries_v2';
+
+  /* ── Storage ── */
+  function load() {
+    try { return JSON.parse(localStorage.getItem(KEY)) || []; }
+    catch { return []; }
+  }
+  function save(d) { localStorage.setItem(KEY, JSON.stringify(d)); }
+
+  /* ── Classify ── */
+  function classify(mx, mn) {
+    if (mx >= 140 || mn >= 90) return { label:'Alta',    cls:'tag-high' };
+    if (mx < 90  || mn < 60)  return { label:'Bassa',   cls:'tag-low'  };
+    return                           { label:'Normale', cls:'tag-normal'};
+  }
+
+  /* ── Format date ── */
+  function fmtDate(s) {
+    if (!s) return '—';
+    const [y,m,d] = s.split('-');
+    const months = ['gen','feb','mar','apr','mag','giu','lug','ago','set','ott','nov','dic'];
+    return `${parseInt(d)} ${months[parseInt(m)-1]} ${y}`;
+  }
+
+  /* ── Render ── */
+  function render() {
+    const data = load().sort((a,b) => b.date.localeCompare(a.date));
+    const n = data.length;
+
+    // stats
+    document.getElementById('stat-count').textContent = n || '—';
+    if (n > 0) {
+      document.getElementById('stat-avg-max').textContent = Math.round(data.reduce((s,e)=>s+e.max,0)/n);
+      document.getElementById('stat-avg-min').textContent = Math.round(data.reduce((s,e)=>s+e.min,0)/n);
+    } else {
+      document.getElementById('stat-avg-max').textContent = '—';
+      document.getElementById('stat-avg-min').textContent = '—';
+    }
+
+    // list
+    const list = document.getElementById('entry-list');
+    if (n === 0) {
+      list.innerHTML = `<div class="empty-state">
+        <span class="empty-icon">♡</span>
+        Nessuna misurazione ancora.<br>Aggiungila nel tab +&nbsp;Aggiungi.
+      </div>`;
+      return;
+    }
+    list.innerHTML = data.map(e => {
+      const {label,cls} = classify(e.max, e.min);
+      return `<div class="entry-card">
+        <div class="entry-body">
+          <div class="entry-date">${fmtDate(e.date)}</div>
+          <div class="entry-values">
+            <span class="val-max">${e.max}</span>
+            <span class="val-sep">/</span>
+            <span class="val-min">${e.min}</span>
+            <span class="val-unit">mmHg</span>
+          </div>
+          <span class="entry-tag ${cls}">${label}</span>
+        </div>
+        <button class="delete-btn" data-id="${e.id}" aria-label="Elimina">✕</button>
+      </div>`;
+    }).join('');
+  }
+
+  /* ── Tabs ── */
+  function showTab(name) {
+    ['aggiungi','storico'].forEach(t => {
+      document.getElementById('tab-'+t).classList.toggle('active', t===name);
+      document.getElementById('page-'+t).classList.toggle('active', t===name);
+    });
+    if (name === 'storico') render();
+  }
+
+  /* ── Stepper repeat-on-hold ── */
+  let _repeatTimer = null;
+  let _repeatInterval = null;
+
+  function step(field, delta) {
+    const inp = document.getElementById('inp-' + field);
+    const min = parseInt(inp.min);
+    const max = parseInt(inp.max);
+    const val = (parseInt(inp.value) || 0) + delta;
+    inp.value = Math.min(max, Math.max(min, val));
+  }
+
+  function startRepeat(field, delta) {
+    step(field, delta);
+    _repeatTimer = setTimeout(() => {
+      _repeatInterval = setInterval(() => step(field, delta), 80);
+    }, 400);
+  }
+
+  function stopRepeat() {
+    clearTimeout(_repeatTimer);
+    clearInterval(_repeatInterval);
+    _repeatTimer = null;
+    _repeatInterval = null;
+  }
+
+  /* ── Add entry ── */
+  document.getElementById('btn-aggiungi').addEventListener('click', () => {
+    const dateVal = document.getElementById('inp-date').value;
+    const maxVal  = parseInt(document.getElementById('inp-max').value);
+    const minVal  = parseInt(document.getElementById('inp-min').value);
+
+    if (!dateVal || isNaN(maxVal) || isNaN(minVal)) {
+      toast('Compila tutti i campi', 'err'); return;
+    }
+    if (maxVal <= minVal) {
+      toast('La massima deve essere maggiore della minima', 'err'); return;
+    }
+    if (maxVal < 60 || maxVal > 250 || minVal < 40 || minVal > 160) {
+      toast('Valori fuori range', 'err'); return;
+    }
+
+    const data = load();
+    data.push({ id: Date.now(), date: dateVal, max: maxVal, min: minVal });
+    save(data);
+    render();
+
+    // reset to sensible defaults
+    document.getElementById('inp-max').value = 120;
+    document.getElementById('inp-min').value = 80;
+
+    toast('Misurazione salvata ✓');
+    showTab('storico');
+  });
+
+  /* ── Delete (event delegation) ── */
+  document.getElementById('entry-list').addEventListener('click', e => {
+    const btn = e.target.closest('.delete-btn');
+    if (!btn) return;
+    const id = parseInt(btn.dataset.id);
+    save(load().filter(e => e.id !== id));
+    render();
+  });
+
+  /* ── Clear all ── */
+  document.getElementById('btn-clear').addEventListener('click', () => {
+    if (!load().length) { toast('Nessuna misurazione da eliminare', 'err'); return; }
+    // custom confirm-like: double tap pattern
+    const btn = document.getElementById('btn-clear');
+    if (btn.dataset.confirm === '1') {
+      localStorage.removeItem(KEY);
+      render();
+      btn.dataset.confirm = '0';
+      btn.textContent = 'Cancella tutto';
+      toast('Storico eliminato');
+    } else {
+      btn.dataset.confirm = '1';
+      btn.textContent = 'Sicuro? Tocca ancora';
+      setTimeout(() => {
+        btn.dataset.confirm = '0';
+        btn.textContent = 'Cancella tutto';
+      }, 3000);
+    }
+  });
+
+  /* ── Toast ── */
+  let _toastTimer;
+  function toast(msg, type = 'ok') {
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.style.background = type === 'err' ? '#e84545' : '#3dd68c';
+    el.style.color       = type === 'err' ? '#fff'    : '#000';
+    el.classList.add('show');
+    clearTimeout(_toastTimer);
+    _toastTimer = setTimeout(() => el.classList.remove('show'), 2500);
+  }
+
+  /* ── Init ── */
+  document.getElementById('inp-date').value = new Date().toISOString().split('T')[0];
+  render();
+</script>
+</body>
+</html>
